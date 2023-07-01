@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:instagram_clone/resources/firestore_methods.dart';
+import 'package:instagram_clone/utils/colors.dart';
 import 'package:intl/intl.dart';
 
 class CommentCard extends StatefulWidget {
   final snap;
+  final postId;
 
-  const CommentCard({super.key, required this.snap});
+  const CommentCard({super.key, required this.snap, required this.postId});
 
   @override
   State<CommentCard> createState() => _CommentCardState();
@@ -52,14 +55,27 @@ class _CommentCardState extends State<CommentCard> {
                     padding: const EdgeInsets.only(
                       top: 4,
                     ),
-                    child: Text(
-                      DateFormat.yMMMd().format(
-                        widget.snap['datePublished'].toDate(),
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                      ),
+                    child: Row(
+                      children: [
+                        Text(
+                          DateFormat.yMMMd().format(
+                            widget.snap['datePublished'].toDate(),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: secondaryColor,
+                          ),
+                        ),
+                        Text(
+                          '    ${widget.snap['likesCmt'].length} likes',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: secondaryColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -69,8 +85,22 @@ class _CommentCardState extends State<CommentCard> {
           Padding(
             padding: const EdgeInsets.all(8),
             child: IconButton(
-              icon: const Icon(Icons.favorite),
-              onPressed: () {},
+              icon: widget.snap['likesCmt'].contains(widget.snap['uid'])
+                  ? const Icon(
+                      Icons.favorite,
+                      color: Colors.red,
+                    )
+                  : const Icon(
+                      Icons.favorite_border,
+                    ),
+              onPressed: () async {
+                await FirestoreMethods().likeComment(
+                  widget.postId,
+                  widget.snap['uid'],
+                  widget.snap['commentId'],
+                  widget.snap['likesCmt'],
+                );
+              },
             ),
           ),
         ],
