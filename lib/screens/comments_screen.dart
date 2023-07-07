@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram_clone/models/user.dart';
 import 'package:instagram_clone/providers/user_provider.dart';
 import 'package:instagram_clone/resources/firestore_methods.dart';
-import 'package:instagram_clone/screens/comment_card.dart';
+import 'package:instagram_clone/widgets/comment_card.dart';
 import 'package:instagram_clone/utils/colors.dart';
 import 'package:provider/provider.dart';
 

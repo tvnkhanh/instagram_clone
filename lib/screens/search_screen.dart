@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:instagram_clone/screens/profile_screen.dart';
 import 'package:instagram_clone/utils/colors.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -12,7 +13,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController searchController = TextEditingController();
-  bool isShowUser = false;
+  bool isShowUsers = false;
 
   @override
   void dispose() {
@@ -28,24 +29,26 @@ class _SearchScreenState extends State<SearchScreen> {
         title: TextFormField(
           controller: searchController,
           decoration: const InputDecoration(
-            labelText: 'Search for a user',
+            labelText: 'Search for users...',
           ),
           onFieldSubmitted: (String _) {
             setState(() {
-              isShowUser = true;
+              isShowUsers = true;
             });
           },
         ),
       ),
-      body: isShowUser
+      body: isShowUsers
           ? FutureBuilder(
               future: FirebaseFirestore.instance
                   .collection('users')
-                  .where('username',
-                      isGreaterThanOrEqualTo: searchController.text)
+                  .where(
+                    'username',
+                    isGreaterThanOrEqualTo: searchController.text,
+                  )
                   .get(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(),
                   );
@@ -53,14 +56,27 @@ class _SearchScreenState extends State<SearchScreen> {
                 return ListView.builder(
                   itemCount: (snapshot.data! as dynamic).docs.length,
                   itemBuilder: (context, index) {
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: NetworkImage(
-                          (snapshot.data! as dynamic).docs[index]['photoUrl'],
+                    return InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ProfileScreen(
+                              uid: (snapshot.data! as dynamic).docs[index]
+                                  ['uid'],
+                            ),
+                          ),
+                        );
+                      },
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(
+                            (snapshot.data! as dynamic).docs[index]['photoUrl'],
+                          ),
+                          radius: 16,
                         ),
-                      ),
-                      title: Text(
-                        (snapshot.data! as dynamic).docs[index]['username'],
+                        title: Text(
+                          (snapshot.data! as dynamic).docs[index]['username'],
+                        ),
                       ),
                     );
                   },

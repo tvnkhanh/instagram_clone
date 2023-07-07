@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone/models/user.dart';
+import 'package:instagram_clone/models/user.dart' as model;
 import 'package:instagram_clone/providers/user_provider.dart';
 import 'package:instagram_clone/resources/firestore_methods.dart';
 import 'package:instagram_clone/screens/comments_screen.dart';
 import 'package:instagram_clone/utils/colors.dart';
+import 'package:instagram_clone/utils/global_variables.dart';
 import 'package:instagram_clone/utils/utils.dart';
 import 'package:instagram_clone/widgets/like_animation.dart';
 import 'package:intl/intl.dart';
@@ -36,22 +38,25 @@ class _PostCardState extends State<PostCard> {
           .doc(widget.snap['postId'])
           .collection('comments')
           .get();
-      commentLen = snap.docs.length;
+
+      setState(() {
+        commentLen = snap.docs.length;
+      });
     } catch (e) {
       showSnackBar(
         e.toString(),
         context,
       );
     }
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    User? user = Provider.of<UserProvider>(context).getUser;
+    model.User? user = Provider.of<UserProvider>(context).getUser;
+    final width = MediaQuery.of(context).size.width;
 
     return Container(
-      color: mobileBackgroundColor,
+      color: width > webScreenSize ? webBackgroundColor : mobileBackgroundColor,
       padding: const EdgeInsets.symmetric(
         vertical: 10,
       ),
@@ -103,10 +108,19 @@ class _PostCardState extends State<PostCard> {
                               .map(
                                 (e) => InkWell(
                                   onTap: () async {
-                                    FirestoreMethods().deletePost(
-                                      widget.snap['postId'],
-                                    );
-                                    Navigator.of(context).pop();
+                                    if (FirebaseAuth
+                                            .instance.currentUser!.uid ==
+                                        widget.snap['uid']) {
+                                      FirestoreMethods().deletePost(
+                                        widget.snap['postId'],
+                                      );
+                                      Navigator.of(context).pop();
+                                    } else {
+                                      showSnackBar(
+                                        "you can't delete posts that are not yours",
+                                        context,
+                                      );
+                                    }
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
@@ -144,7 +158,9 @@ class _PostCardState extends State<PostCard> {
               alignment: Alignment.center,
               children: [
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.3,
+                  height: width > webScreenSize
+                      ? MediaQuery.of(context).size.height * 1
+                      : MediaQuery.of(context).size.height * 0.5,
                   width: double.infinity,
                   child: Image.network(
                     widget.snap['postUrl'],
